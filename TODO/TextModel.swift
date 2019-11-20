@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 struct TextModel {
-    
     var paragraphString: String?
     var attributeArray: [NSAttributedString.Key: Any]?
+    var paragraphHeight: CGFloat?
 }

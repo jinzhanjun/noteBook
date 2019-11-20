@@ -66,11 +66,12 @@ class NoteTextView: UITextView {
         // 简单截断
         defaultParagraphStyle.lineBreakMode = .byCharWrapping
         // 行距 10
-        defaultParagraphStyle.lineSpacing = 10
+        defaultParagraphStyle.lineSpacing = 0
         // 与上一段间距 10
-        defaultParagraphStyle.paragraphSpacingBefore = 10
+        defaultParagraphStyle.paragraphSpacingBefore = 0
         defaultAttributes = [NSAttributedString.Key.font: defaultTextFont, NSAttributedString.Key.paragraphStyle: defaultParagraphStyle]
-        
+        contentInset.top = 5
+        contentInset.bottom = 5
         // 设置默认属性
         typingAttributes = defaultAttributes
         self.textContainer.lineFragmentPadding = lineFragmentPadding
@@ -184,12 +185,32 @@ class NoteTextView: UITextView {
         //删除宽度边距
         contentWidth -= broadWidth
         // 创建需要计算的文本内容大小
-        let InSize = CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
+        let inSize = CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
 
-        let calculatedSize = string.boundingRect(with: InSize, options: [.usesFontLeading, .usesLineFragmentOrigin], attributes: withAttributes, context: nil).size
+        let calculatedSize = string.boundingRect(with: inSize, options: [.usesFontLeading, .usesLineFragmentOrigin], attributes: withAttributes, context: nil).size
         
         let adjustSize = CGSize(width: ceil(calculatedSize.width), height: ceil(calculatedSize.height + broadHeight))
 //        print("adjustSize = \(adjustSize)")
+        return adjustSize
+    }
+    
+    /// 获取文本的尺寸
+    class func getTextRect(with str: String, in textView: UITextView, withAttributes: [NSAttributedString.Key: Any]) -> CGSize {
+        var contentWidth = textView.frame.size.width
+        let broadWidth =
+            textView.contentInset.left
+                + textView.contentInset.right
+                + textView.textContainerInset.left
+                + textView.textContainerInset.right
+                + textView.textContainer.lineFragmentPadding
+                + textView.textContainer.lineFragmentPadding
+        
+        contentWidth -= broadWidth
+        let inSize = CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
+        let size = str.boundingRect(with: inSize, options: [.usesFontLeading, .usesLineFragmentOrigin], attributes: withAttributes, context: nil).size
+        
+        let adjustSize = CGSize(width: ceil(size.width), height: ceil(size.height))
+        
         return adjustSize
     }
     
@@ -232,18 +253,13 @@ class NoteTextView: UITextView {
         return array
     }
     
-    /// 获取textView中光标位置后面新输入的字符串
+    /// 获取textView中新段落的字符串
     /// - Parameters:
     ///   - textView: 正在输入的TextView
-    ///   - lastParagraphRange: 上一段光标位置 如果没有就从头开始
-    class func getNewParagraphString(in textView: UITextView, with range: NSRange?) -> String {
-        // 光标位置的字符串索引
-        let indexAtRange = textView.text.index(textView.text.startIndex, offsetBy: range?.location ?? 0)
-        // textView中text最后的字符串索引
-        let indexEnd = textView.text.index(textView.text.startIndex, offsetBy: textView.text.count)
-        
-        let subString = textView.text[indexAtRange..<indexEnd]
-        return String(subString)
+    class func getNewParagraphString(in textView: UITextView) -> String? {
+        let textStr = textView.text
+        guard let subStr = textStr?.components(separatedBy: "\n").last else {return nil}
+        return String(subStr)
     }
 }
 

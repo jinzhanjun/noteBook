@@ -18,6 +18,8 @@ class NoteViewController: UIViewController, UITextViewDelegate, UIScrollViewDele
     var textViewMaxHeight: CGFloat = 100
     /// textView的文本高度
     var textViewTextHeight: CGFloat = 44
+    /// 已完成段落的高度
+    var paragraphHeight: CGFloat = 0
     
     /// 创建内容模型
     lazy var textModleArray: [TextModel] = []
@@ -93,10 +95,6 @@ class NoteViewController: UIViewController, UITextViewDelegate, UIScrollViewDele
         noteTextView.isScrollEnabled = true
         noteTextView.delegate = self
         noteTextView.backgroundColor = UIColor.green
-        noteTextView.contentInset.top = 10
-        noteTextView.contentInset.bottom = 10
-        
-        
         // 设置为默认文字属性
         typingAttri = noteTextView.defaultAttributes
         // 避免闪烁问题
@@ -116,33 +114,39 @@ class NoteViewController: UIViewController, UITextViewDelegate, UIScrollViewDele
     
     // 文本变化后调用该方法
     func textViewDidChange(_ textView: UITextView) {
+        // 获取最新段落的文字
+        guard let textStr = NoteTextView.getNewParagraphString(in: textView) else {return}
+        print(textStr)
+        let size = NoteTextView.getStringRect(with: textStr, inTextView: textView, withAttributes: typingAttri)
+//        print(size.height)
         
-        let text = NoteTextView.getNewParagraphString(in: textView, with: lastParagraphRange)
-        
-        var size = NoteTextView.getStringRect(with: text, inTextView: textView, withAttributes: typingAttri)
-        textViewTextHeight = size.height
-        // 如果文本高度大于最大高度，textView高度为最大高度；反之为文本高度
-        size.height = (size.height > textViewMaxHeight) ? textViewMaxHeight : size.height
-        size.width = UIScreen.main.bounds.width
+        let testSize = NoteTextView.getStringRect(with: textView.text, inTextView: textView, withAttributes: typingAttri)
+        textViewTextHeight = size.height + paragraphHeight
+        print("上一段的高度：\(paragraphHeight)")
+        print("本行的高度：\(size.height)")
+        print("计算的高度\(textViewShowHeight)")
+        print("应该的高度：\(testSize.height)")
+//        print(textView.typingAttributes)
         // 更新textView的框架
-        refreshViewFrame(withSize: size, toView: textView)
+        refreshViewFrame(withSize: CGSize(width: UIScreen.main.bounds.width, height: textViewShowHeight), toView: textView)
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        
         if text == "\n" {
-            // 记录上一段光标的最后位置
-            lastParagraphRange?.location = range.location + 1
             var model = TextModel()
             guard let textArray = NoteTextView.getParagraphText(in: textView),
                 let paragraphString = textArray.last
                 else { return false }
             // 记录上一段文字内容
             model.paragraphString = paragraphString
-            model.attributeArray = typingAttri
+            model.attributeArray = textView.typingAttributes
+            // 记录上一段文字的高度
+            let height = NoteTextView.getTextRect(with: paragraphString, in: textView, withAttributes: model.attributeArray!).height
+//            print(height)
+            model.paragraphHeight = height
+            paragraphHeight += height
             textModleArray.append(model)
-            
-            
+//            print(model.attributeArray)
         }
         return true
     }
