@@ -116,17 +116,9 @@ class NoteViewController: UIViewController, UITextViewDelegate, UIScrollViewDele
     func textViewDidChange(_ textView: UITextView) {
         // 获取最新段落的文字
         guard let textStr = NoteTextView.getNewParagraphString(in: textView) else {return}
-        print(textStr)
         let size = NoteTextView.getStringRect(with: textStr, inTextView: textView, withAttributes: typingAttri)
-//        print(size.height)
-        
-        let testSize = NoteTextView.getStringRect(with: textView.text, inTextView: textView, withAttributes: typingAttri)
+
         textViewTextHeight = size.height + paragraphHeight
-        print("上一段的高度：\(paragraphHeight)")
-        print("本行的高度：\(size.height)")
-        print("计算的高度\(textViewShowHeight)")
-        print("应该的高度：\(testSize.height)")
-//        print(textView.typingAttributes)
         // 更新textView的框架
         refreshViewFrame(withSize: CGSize(width: UIScreen.main.bounds.width, height: textViewShowHeight), toView: textView)
     }
@@ -142,11 +134,9 @@ class NoteViewController: UIViewController, UITextViewDelegate, UIScrollViewDele
             model.attributeArray = textView.typingAttributes
             // 记录上一段文字的高度
             let height = NoteTextView.getTextRect(with: paragraphString, in: textView, withAttributes: model.attributeArray!).height
-//            print(height)
             model.paragraphHeight = height
             paragraphHeight += height
             textModleArray.append(model)
-//            print(model.attributeArray)
         }
         return true
     }

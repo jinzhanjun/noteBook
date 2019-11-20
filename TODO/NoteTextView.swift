@@ -47,6 +47,17 @@ class NoteTextView: UITextView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    /// 重写光标大小的方法
+    override func caretRect(for position: UITextPosition) -> CGRect {
+        var originalRect = super.caretRect(for: position)
+        // 设置高度为字体高度 + 2
+        originalRect.size.height = (self.font?.lineHeight ?? 0) + 2
+        originalRect.size.width = 2.5
+        return originalRect
+    }
+    
+    
+    // 设置界面
     private func setupUI() {
         
         // 设置段落格式换行方式
@@ -66,9 +77,9 @@ class NoteTextView: UITextView {
         // 简单截断
         defaultParagraphStyle.lineBreakMode = .byCharWrapping
         // 行距 10
-        defaultParagraphStyle.lineSpacing = 0
+        defaultParagraphStyle.lineSpacing = 8
         // 与上一段间距 10
-        defaultParagraphStyle.paragraphSpacingBefore = 0
+        defaultParagraphStyle.paragraphSpacing = 20
         defaultAttributes = [NSAttributedString.Key.font: defaultTextFont, NSAttributedString.Key.paragraphStyle: defaultParagraphStyle]
         contentInset.top = 5
         contentInset.bottom = 5
@@ -190,7 +201,6 @@ class NoteTextView: UITextView {
         let calculatedSize = string.boundingRect(with: inSize, options: [.usesFontLeading, .usesLineFragmentOrigin], attributes: withAttributes, context: nil).size
         
         let adjustSize = CGSize(width: ceil(calculatedSize.width), height: ceil(calculatedSize.height + broadHeight))
-//        print("adjustSize = \(adjustSize)")
         return adjustSize
     }
     
@@ -206,10 +216,15 @@ class NoteTextView: UITextView {
                 + textView.textContainer.lineFragmentPadding
         
         contentWidth -= broadWidth
+        
+        guard let typingParagraphStyle = textView.typingAttributes[NSAttributedString.Key.paragraphStyle] as? NSMutableParagraphStyle else {
+            return CGSize(width: 0, height: 0)
+        }
+        let broadHeight = typingParagraphStyle.lineSpacing + typingParagraphStyle.paragraphSpacing
         let inSize = CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
         let size = str.boundingRect(with: inSize, options: [.usesFontLeading, .usesLineFragmentOrigin], attributes: withAttributes, context: nil).size
         
-        let adjustSize = CGSize(width: ceil(size.width), height: ceil(size.height))
+        let adjustSize = CGSize(width: ceil(size.width), height: ceil(size.height + broadHeight))
         
         return adjustSize
     }
@@ -237,11 +252,8 @@ class NoteTextView: UITextView {
         contentWidth -= broadWidth
         // 创建需要计算的文本内容大小
         let InSize = CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
-        
         let calculatedSize = attrString.boundingRect(with: InSize, options: [.usesFontLeading, .usesLineFragmentOrigin], context: nil).size
-        
         let adjustSize = CGSize(width: ceil(calculatedSize.width), height: ceil(calculatedSize.height + broadHeight))
-        //        print("adjustSize = \(adjustSize)")
         return adjustSize
     }
     
